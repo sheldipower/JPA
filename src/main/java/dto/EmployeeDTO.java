@@ -2,13 +2,12 @@ package dto;
 
 import pojo.Employee;
 
-public class EmployeeDTO {
     public class EmployeeDTO {
         private Integer id;
         private String name;
         private Integer salary;
 
-        public static EmployeeDTO fromEmployee(Employee employee) {
+        public static EmployeeDTO fromEmployee (Employee employee) {
             EmployeeDTO employeeDTO = new EmployeeDTO();
             employeeDTO.setId(employee.getId());
             employeeDTO.setName(employee.getName());
@@ -48,4 +47,4 @@ public class EmployeeDTO {
             this.salary = salary;
         }
     }
-}
+

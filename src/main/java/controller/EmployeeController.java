@@ -7,17 +7,19 @@ import org.springframework.web.server.ResponseStatusException;
 import pojo.Employee;
 import servise.EmployeeService;
 
+import java.util.List;
+
 @RestController
-@RequestMapping
+@RequestMapping ("employees")
 public class EmployeeController {
     private static EmployeeService employeeService;
-    public EmployeeController(EmployeeService employeeService) {
+    public EmployeeController (EmployeeService employeeService) {
         this.employeeService = employeeService;
     }
     /** * GET  возвращать самой высокой зарплатой
      */
     @GetMapping("withHighestSalary")
-    public List<Employee> withHighestSalary(@RequestParam(value = "salary", required = false) Integer salary) {
+    public List<Employee> withHighestSalary (@RequestParam(value = "salary", required = false) Integer salary) {
         return employeeService.employeeHighSalary(salary);
     }
 
@@ -51,7 +53,7 @@ public List<EmployeeFullInfo> getBuIdEmployee(@PathVariable int id) {
 
 /*** GET возвращать информацию о сотрудниках на странице.
  */
-@GetMapping("/{page}")
+   @GetMapping("/{page}")
 public List<Employee> getEmployeesPaging(@PathVariable int page) {
     int size = 2;
     return employeeService.getEmployeesPaging(page, size);

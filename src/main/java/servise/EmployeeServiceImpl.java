@@ -1,17 +1,28 @@
 package servise;
 
+import dto.EmployeeDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import repository.EmployeeRepository;
 import repository.PagingEmployeeRepository;
 
 import java.awt.print.Pageable;
+import java.util.stream.Collectors;
 
 @Service
+
 public class EmployeeServiceImpl implements EmployeeService {
 
-    private EmployeeRepository employeeRepository;
-    private final PagingEmployeeRepository pagingEmployeeRepository;
+    private final EmployeeRepository employeeRepository;
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
+    }
+    @Override
+    public List<EmployeeDTO> getAllEmployees() {
+        return employeeRepository.findAllEmployees().stream()
+                .map(EmployeeDTO::fromEmployee)
+                .collect(Collectors.toList());
+    }
     public EmployeeServiceImpl(EmployeeRepository employeeRepository, PagingEmployeeRepository pagingEmployeeRepository) {
         this.employeeRepository = employeeRepository;
         this.pagingEmployeeRepository = pagingEmployeeRepository;
@@ -53,9 +64,10 @@ public List<EmployeeFullInfo> getBuIdEmployeeFull(int id) {
  */
     @Override
     public List<Employee> getEmployeesPaging(int page, int size) {
-        Pageable employeeOfConcretePage = PageRequest.of(page, size);
-        Page<Employee> employeePage = pagingEmployeeRepository.findAll(employeeOfConcretePage);
-        return employeePage.stream().toList();
+        Pageable employeeOfConcretePage = PageRequest.of (pageIndex, unitPerPage);
+        Page<Employee> employeePage = PagingEmployeeRepository.findAll (employeeOfConcretePage);
+        return page.stream()
+                .toList();
     }
 
 }

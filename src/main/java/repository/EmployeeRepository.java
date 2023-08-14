@@ -4,9 +4,11 @@ import dto.EmployeeFullInfo;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import pojo.Employee;
 
 @Repository
-public interface EmployeeRepository extends CrudRepository<Employee, Integer> {
+public interface EmployeeRepository extends CrudRepository <Employee, Integer> {
+
     /**
      * GET самой высокой зарплатой
      */
