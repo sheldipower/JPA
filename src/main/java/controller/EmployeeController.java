@@ -10,7 +10,7 @@ import servise.EmployeeService;
 import java.util.List;
 
 @RestController
-@RequestMapping ("employees")
+@RequestMapping ("/employees")
 public class EmployeeController {
     private static EmployeeService employeeService;
     public EmployeeController (EmployeeService employeeService) {

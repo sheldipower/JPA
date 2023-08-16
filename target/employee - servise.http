@@ -1,0 +1,25 @@
+### Получение суммы зарплат сотрудников
+GET http://localhost:8080/employee/salary/sum
+### Получение сотрудника с минимальной зарплатой
+GET http://localhost:8080/employee/salary/min
+### Получение сотрудника с максимальной зарплатой
+GET http://localhost:8080/employee/salary/max
+
+### Получение всех сотрудников, зарплата которых больше средней
+GET http://localhost:8080/employee/high-salary
+GET http://localhost:8080/employee/high-salary
+
+### Cоздание множества новых сотрудников;
+POST http://localhost:8080/employees
+
+### Редактирование сотрудника с указанным id;
+PUT http://localhost:8080/employees/{id}
+
+### Метод возвращения информации о сотруднике с переданным id;
+GET http://localhost:8080/employees/{id}
+
+### Удаление сотрудника с переданным id;
+DELETE http://localhost:8080/employees/{id}
+
+### Метод возвращения всех сотрудников, зарплата которых выше переданного параметра salary.
+GET http://localhost:8080/employees/salaryHigherThan?salary=
