@@ -1,6 +1,6 @@
-package dto;
+package com.example.demo.dto;
 
-import pojo.Employee;
+import com.example.demo.pojo.Employee;
 
     public class EmployeeDTO {
         private Integer id;

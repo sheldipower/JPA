@@ -1,13 +1,17 @@
-package repository;
+package com.example.demo.repository;
 
-import dto.EmployeeFullInfo;
+import com.example.demo.dto.EmployeeFullInfo;
+import com.example.demo.pojo.Employee;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import pojo.Employee;
+
+import java.util.List;
 
 @Repository
-public interface EmployeeRepository extends CrudRepository <Employee, Integer> {
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
     /**
      * GET самой высокой зарплатой
@@ -20,7 +24,7 @@ public interface EmployeeRepository extends CrudRepository <Employee, Integer> {
      * GET возвращать полную информацию о сотруднике
      */
 
-    @Query("SELECT new ru.skypro.lessons.springboot.springweb.dto. " +
+    @Query("SELECT new com.example.demo.dto. " +
             "EmployeeFullInfo(e.id,e.name , e.salary , p.role) " +
             "FROM Employee e join fetch Position p " +
             "WHERE e.position = p")
@@ -30,7 +34,7 @@ public interface EmployeeRepository extends CrudRepository <Employee, Integer> {
      * GET возвращать информацию о сотруднике с переданным position
      */
 
-    @Query("SELECT new ru.skypro.lessons.springboot.springweb.dto." +
+    @Query("SELECT new com.example.demo.dto." +
             "EmployeeFullInfo(e.id,e.name , e.salary , p.role) " +
             "FROM Employee e JOIN FETCH Position p " +
             "WHERE e.position= p AND p.role = :role")
@@ -39,7 +43,7 @@ public interface EmployeeRepository extends CrudRepository <Employee, Integer> {
     /**
      * GET возвращать информацию о сотруднике с переданным id
      */
-    @Query("SELECT new ru.skypro.lessons.springboot.springweb.dto." +
+    @Query("SELECT new com.example.demo.dto." +
             "EmployeeFullInfo(e.id,e.name , e.salary , p.role) " +
             "FROM Employee e  JOIN FETCH Position p " +
             "WHERE e.position = p AND e.id = :id")

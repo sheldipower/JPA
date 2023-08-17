@@ -1,6 +1,6 @@
-package dto;
+package com.example.demo.dto;
 
-import pojo.Position;
+import com.example.demo.pojo.Position;
 
 public class PositionDTO {
     private Integer position_id;

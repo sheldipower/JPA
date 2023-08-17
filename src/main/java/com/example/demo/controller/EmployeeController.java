@@ -1,11 +1,11 @@
-package controller;
+package com.example.demo.controller;
 
-import dto.EmployeeFullInfo;
+import com.example.demo.servise.EmployeeService;
+import com.example.demo.dto.EmployeeFullInfo;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import pojo.Employee;
-import servise.EmployeeService;
+import com.example.demo.pojo.Employee;
 
 import java.util.List;
 

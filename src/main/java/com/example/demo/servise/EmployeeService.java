@@ -1,4 +1,10 @@
-package servise;
+package com.example.demo.servise;
+
+import com.example.demo.dto.EmployeeDTO;
+import com.example.demo.dto.EmployeeFullInfo;
+import com.example.demo.pojo.Employee;
+
+import java.util.List;
 
 public interface EmployeeService {
     /**
@@ -19,5 +25,7 @@ List<EmployeeFullInfo>getBuPositionToEmployee(String role);
     List<Employee> getEmployeesPaging( int page, int size);
 
     List<EmployeeFullInfo> getFull();
+
+    List<EmployeeDTO> getAllEmployees();
 }
 

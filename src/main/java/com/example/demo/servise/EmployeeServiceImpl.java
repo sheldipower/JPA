@@ -1,12 +1,16 @@
-package servise;
+package com.example.demo.servise;
 
-import dto.EmployeeDTO;
+import com.example.demo.dto.EmployeeDTO;
+import com.example.demo.dto.EmployeeFullInfo;
+import com.example.demo.pojo.Employee;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import repository.EmployeeRepository;
-import repository.PagingEmployeeRepository;
+import com.example.demo.repository.EmployeeRepository;
+import com.example.demo.repository.PagingEmployeeRepository;
 
 import java.awt.print.Pageable;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,17 +23,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
     @Override
     public List<EmployeeDTO> getAllEmployees() {
-        return employeeRepository.findAllEmployees().stream()
+        return employeeRepository.findAll().stream()
                 .map(EmployeeDTO::fromEmployee)
                 .collect(Collectors.toList());
     }
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository, PagingEmployeeRepository pagingEmployeeRepository) {
-        this.employeeRepository = employeeRepository;
-        this.pagingEmployeeRepository = pagingEmployeeRepository;
-    }
-
-
-
 /** * GET возвращать информацию о сотруднике с переданным id
  */
 @Override
@@ -64,10 +61,9 @@ public List<EmployeeFullInfo> getBuIdEmployeeFull(int id) {
  */
     @Override
     public List<Employee> getEmployeesPaging(int page, int size) {
-        Pageable employeeOfConcretePage = PageRequest.of (pageIndex, unitPerPage);
-        Page<Employee> employeePage = PagingEmployeeRepository.findAll (employeeOfConcretePage);
-        return page.stream()
-                .toList();
+        PageRequest employeeOfConcretePage = PageRequest.of(page, size);
+        Page<Employee> employeePage = employeeRepository.findAll(employeeOfConcretePage);
+        return employeePage.getContent();
     }
 
 }

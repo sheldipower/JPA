@@ -1,7 +1,7 @@
-package repository;
+package com.example.demo.repository;
 
+import com.example.demo.pojo.Employee;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import pojo.Employee;
 
 public interface PagingEmployeeRepository extends PagingAndSortingRepository<Employee,Integer> {
 
