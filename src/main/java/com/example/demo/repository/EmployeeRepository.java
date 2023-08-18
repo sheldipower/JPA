@@ -27,7 +27,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     @Query("SELECT new com.example.demo.dto. " +
             "EmployeeFullInfo(e.id,e.name , e.salary , p.role) " +
             "FROM Employee e join fetch Position p " +
-            "WHERE e.position = p")
+            "ON e.position = p")
     List<EmployeeFullInfo> getFullEmployee();
 
     /**
@@ -37,7 +37,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     @Query("SELECT new com.example.demo.dto." +
             "EmployeeFullInfo(e.id,e.name , e.salary , p.role) " +
             "FROM Employee e JOIN FETCH Position p " +
-            "WHERE e.position= p AND p.role = :role")
+            "ON e.position= p AND p.role = :role")
     List<EmployeeFullInfo> buPositionToEmployee(String role);
 
     /**
@@ -46,6 +46,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     @Query("SELECT new com.example.demo.dto." +
             "EmployeeFullInfo(e.id,e.name , e.salary , p.role) " +
             "FROM Employee e  JOIN FETCH Position p " +
-            "WHERE e.position = p AND e.id = :id")
+            "ON e.position = p AND e.id = :id")
     List<EmployeeFullInfo> buIdEmployeeINfo(int id);
 }
