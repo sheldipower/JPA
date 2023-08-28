@@ -3,10 +3,13 @@ package com.example.demo.controller;
 import com.example.demo.servise.EmployeeService;
 import com.example.demo.dto.EmployeeFullInfo;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import com.example.demo.pojo.Employee;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -59,4 +62,16 @@ public List<Employee> getEmployeesPaging(@PathVariable int page) {
     return employeeService.getEmployeesPaging(page, size);
 }
 
+    /**
+     * POST принимать на вход файл JSON,
+     * Все сотрудники из загружаемого файла должны быть созранены в базе данных.
+     */
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void postJsonFileEmployeeRead(@RequestParam("file") MultipartFile file) {
+        try {
+            employeeService.postJsonFileEmployeeRead(file);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 }

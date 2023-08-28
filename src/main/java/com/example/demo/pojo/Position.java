@@ -1,26 +1,33 @@
 package com.example.demo.pojo;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Table
 @Entity
 public class Position {
-    @Id()
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer position_id;
-    @Column(name = "role")
-    private String role;
+    private Integer positionId;
 
+    private String role;
+    @OneToMany(mappedBy = "position")
+    private List<Employee> employeeList= new ArrayList<Employee>();
 
     public Position() {
     }
 
-    public Integer getPosition_id() {
-        return position_id;
+    public Position(String role) {
+        this.role = role;
     }
 
-    public void setPosition_id(Integer position_id) {
-        this.position_id = position_id;
+    public Integer getPositionId() {
+        return positionId;
+    }
+
+    public void setPositionId(Integer positionId) {
+        this.positionId = positionId;
     }
 
     public String getRole() {
@@ -31,13 +38,19 @@ public class Position {
         this.role = role;
     }
 
+    public List<Employee> getEmployeeList() {
+        return employeeList;
+    }
+
+    public void setEmployeeList(List<Employee> employeeList) {
+        this.employeeList = employeeList;
+    }
+
     @Override
     public String toString() {
         return "Position{" +
-                "position_id=" + position_id +
+                "positionId=" + positionId +
                 ", role='" + role + '\'' +
                 '}';
     }
-
 }
-
