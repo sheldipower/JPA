@@ -1,50 +1,58 @@
 package com.example.demo.controller;
 
-import com.example.demo.servise.EmployeeService;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import service.EmployeeService;
+
+import javax.annotation.Resource;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 @RestController
-@RequestMapping ("report")
+@RequestMapping("/report")
 public class ReportController {
-    private static EmployeeService employeeService;
+    private final EmployeeService employeeService;
 
     public ReportController(EmployeeService employeeService) {
         this.employeeService = employeeService;
     }
 
-    /**
-     * POST формировать JSON - файл со статистикой по отделам:
-     */
-    @PostMapping(value = "")
+    @PostMapping("/")
     public int report() {
         return employeeService.generateReport();
     }
 
-    /**
-     * GET находить и возвращать созданный ранее файл в формате JSON по идентефикатору.
-     */
-
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<?> dowloasReportId(@RequestParam Integer id) {
-        String filePath = "test.json";
-        ByteArrayResource resource = new
-                ByteArrayResource(employeeService.generateReportId(id).get().getData().getBytes());
-        return
-                ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + filePath + "\"")
-                        .header(HttpHeaders.CONTENT_TYPE,
-                                MediaType.APPLICATION_JSON_VALUE)
-                        .body(resource);
+    @GetMapping("/{id}")
+    public ResponseEntity<Resource> find(@PathVariable int id) {
+        Resource resource = employeeService.findReport(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.json\"")
+                .body(resource);
+    }
+    @GetMapping("file/{id}")
+    public ResponseEntity<Resource> findFile(@PathVariable int id) {
+        var file = employeeService.findReportFile(id);
+        if (file == null) {
+            return ResponseEntity.noContent().build();
+        }
+        try {
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.json")
+                    .contentLength(file.length())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
-    }
-//        GET-запрос
-//        localhost:8080/report/{id}
-//        . Он должен находить по переданному идентификатору отчет и формировать из его содержимого файл формата json.
-//        После вызова контроллера в сваггере должна быть возможность выгружать сформированный отчет в виде файла.
-//        Выгружаемый файл содержит говорящее имя и расширение формата json.
 
+
+}
 

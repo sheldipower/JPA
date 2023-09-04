@@ -1,77 +1,98 @@
 package com.example.demo.controller;
 
-import com.example.demo.servise.EmployeeService;
-import com.example.demo.dto.EmployeeFullInfo;
-import org.springframework.http.HttpStatus;
+
+import dto.EmployeeDto;
+import org.apache.el.stream.Optional;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
-import com.example.demo.pojo.Employee;
+import service.EmployeeService;
 
-import java.io.IOException;
 import java.util.List;
 
+
 @RestController
-@RequestMapping ("/employees")
+@RequestMapping("/employee")
 public class EmployeeController {
-    private static EmployeeService employeeService;
-    public EmployeeController (EmployeeService employeeService) {
+    private final EmployeeService employeeService;
+
+    public EmployeeController(EmployeeService employeeService) {
         this.employeeService = employeeService;
     }
-    /** * GET  возвращать самой высокой зарплатой
-     */
-    @GetMapping("withHighestSalary")
-    public List<Employee> withHighestSalary (@RequestParam(value = "salary", required = false) Integer salary) {
-        return employeeService.employeeHighSalary(salary);
+
+    @GetMapping("/salary/sum")
+    public int getSumOfSalaries() {
+        return employeeService.getSumOfSalaries();
+    }
+    @GetMapping("/salary/min")
+    public EmployeeDto getEmployeeWithMinSalary() {
+        return employeeService.getEmployeeWithMinSalary();
+    }
+    @GetMapping("/salary/max")
+    public EmployeeDto getEmployeeWithMaxSalary() {
+        return employeeService.getEmployeeWithMaxSalary();
     }
 
-/*** GET возвращать информацию о сотруднике с переданным position
- */  @GetMapping(params = "position")
-public List<EmployeeFullInfo> getBuIdEmployeePosition(@RequestParam("position") String position) {
-    try { return employeeService.getBuPositionToEmployee(position);
-    } catch (Throwable t) {
-        String message = "Нет такого position";
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+    @GetMapping("/high-salary")
+    public List<EmployeeDto> getEmployeeWithSalaryHigherThanAverage() {
+        return employeeService.getEmployeeWithSalaryHigherThanAverage();
     }
-}
 
-/** * GET возвращать полную информацию о сотруднике
- */
-@GetMapping("/full")
-public List<EmployeeFullInfo> getFull() {
-    return employeeService.getFull();
-}
-
-/** * GET возвращать информацию о сотруднике с переданным id
-      */
-@GetMapping("/{id}/fullinfo")
-
-public List<EmployeeFullInfo> getBuIdEmployee(@PathVariable int id) {
-    try { return employeeService.getBuIdEmployeeFull(id);
-    } catch (Throwable t) {
-        String message = "Нет такого id"; throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+    // Создание множества новых сотрудников
+    @PostMapping
+    public List<EmployeeDto> createManyEmployee(@RequestBody List<EmployeeDto> employeeList){
+        return employeeService.createManyEmployee(employeeList);
     }
-}
+    // Редактирование сотрудника с указанным id;
+    @PutMapping("/{id}")
+    public void update(@PathVariable int id, @RequestBody EmployeeDto employee){
+        employeeService.update(id, employee);
+    }
+    //Возвращение информации о сотруднике с переданным id;
+    @GetMapping("/{id}")
+    public EmployeeDto get(@PathVariable int id) {
+        return employeeService.get(id);
+    }
+    //Удаление сотрудника с переданным id.
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable int id) {
+        employeeService.delete(id);
+    }
+    //Метод возвращения всех сотрудников, зарплата которых выше переданного параметра salary.
+    @GetMapping("/salaryHigherThan")
+    public List<EmployeeDto> getFindEmployeeSalaryHigherThan(@RequestParam int salary) {
+        return employeeService.getFindEmployeeSalaryHigherThan(salary);
+    }
+    // Возвращение информации о сотрудниках с самой высокой зарплатой в фирме;
+    @GetMapping("/withHighestSalary")
+    public List<EmployeeDto> getEmployeesWithHighestSalary() {
+        return employeeService.getEmployeesWithHighestSalary();
+    }
+    @GetMapping
+    public List<EmployeeDto> getEmployees(@RequestParam(required = false) String position) {
+        return employeeService.getEmployees(
+                Optional.ofNullable(position)
+                        .filter(pos -> !pos.isEmpty())
+                        .orElse(null)
+        );
+    }
+    //Метод возвращающий полную информацию о сотруднике (имя, зарплата, название должности) с переданным в пути запроса идентификатором.
+    @GetMapping("/{id}/fullInfo")
+    public EmployeeDto getFullInfo(@PathVariable int id) {
+        return employeeService.getFullInfo(id);
+    }
+    //Метод возвращающий информацию о сотрудниках, основываясь на номере страницы.
+    // Если страница не указана, то возвращается первая страница.
+    // Номера страниц начинаются с 0. Лимит на количество сотрудников на странице — 10 человек.
+    @GetMapping("page")
+    public List<EmployeeDto> getEmployeesFromPage(@RequestParam(required = false, defaultValue = "0") int page) {
+        return employeeService.getEmployeesFromPage(page);
+    }
 
-/*** GET возвращать информацию о сотрудниках на странице.
- */
-   @GetMapping("/{page}")
-public List<Employee> getEmployeesPaging(@PathVariable int page) {
-    int size = 2;
-    return employeeService.getEmployeesPaging(page, size);
-}
-
-    /**
-     * POST принимать на вход файл JSON,
-     * Все сотрудники из загружаемого файла должны быть созранены в базе данных.
-     */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public void postJsonFileEmployeeRead(@RequestParam("file") MultipartFile file) {
-        try {
-            employeeService.postJsonFileEmployeeRead(file);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+    public void upload(@RequestPart("employees") MultipartFile file) {
+        employeeService.upload(file);
     }
+
+
 }
