@@ -1,212 +1,114 @@
 package service;
 
-import aj.org.objectweb.asm.TypeReference;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import department.Employee;
-import department.Report;
-import dto.EmployeeDto;
-import exeption.EmployeeNotFoundExeption;
-import exeption.EmployeeNotValidExeption;
-import org.springframework.core.io.ByteArrayResource;
+import dto.EmployeeDTO;
+import mappers.EmployeeMapper;
+import model.EmployeeEntity;
+import org.apache.el.stream.Optional;
+import org.hibernate.annotations.common.util.impl.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import repository.EmployeeRepository;
-import repository.ReportRepository;
 
-import javax.annotation.Resource;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
+import java.awt.print.Pageable;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
     private final EmployeeRepository employeeRepository;
-    private final ReportRepository reportRepository;
     private final EmployeeMapper employeeMapper;
-    private final ObjectMapper objectMapper;
+    Logger logger = LoggerFactory.getLogger(EmployeeService.class);
 
-    public EmployeeService(EmployeeRepository employeeRepository,
-                           ReportRepository reportRepository,
-                           EmployeeMapper employeeMapper,
-                           ObjectMapper objectMapper) {
+    public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper) {
         this.employeeRepository = employeeRepository;
-        this.reportRepository = reportRepository;
         this.employeeMapper = employeeMapper;
-        this.objectMapper = objectMapper;
     }
 
-//    @PostConstruct
-//    public void init() {
-//        employeeRepository.deleteAll();
-//        employeeRepository.saveAll(
-//                List.of(
-//                        new Employee("Катя", 90_000),
-//                        new Employee("Дима", 102_000),
-//                        new Employee("Олег", 80_000),
-//                        new Employee("Вика", 165_000),
-//                        new Employee("Женя", 175_000)
-//                )
-//        );
-//    }
-
-    public int getSumOfSalaries() {
-        return employeeRepository.getSumOfSalaries();
+    public EmployeeDTO createEmployee(EmployeeEntity employee) {
+        logger.info("Was invoked method for create employee" + employee);
+        EmployeeEntity saveEmployee = employeeRepository.save(employee);
+        EmployeeDTO employeeDTO = employeeMapper.toDto(saveEmployee);
+        logger.debug("Employee successfully created" + employee);
+        return employeeDTO;
     }
 
-    public EmployeeDto getEmployeeWithMinSalary() {
-        Page<EmployeeDto> page = employeeRepository.getEmployeeWithMinSalary(PageRequest.of(0, 1));
-        if (page.isEmpty()) {
-            return null;
-        }
-        return page.getContent().get(0);
+    public EmployeeDTO getInformationForEmployee(int id) {
+        logger.info("The method of getting information about the employee was called" + id);
+        EmployeeDTO employeeDTO = employeeRepository.findById(id)
+                .map(employeeMapper::toDto)
+                .orElseThrow(() -> { RuntimeException re = new RuntimeException();
+                    logger.error("Employee information found" + re);
+                    return re;});
+        logger.debug("Employee information found" + id);
+        return employeeDTO;
     }
 
-    public EmployeeDto getEmployeeWithMaxSalary() {
-        List<EmployeeDto> employeeWithMaxSalary = getEmployeesWithHighestSalary();
-        if (employeeWithMaxSalary.isEmpty()) {
-            return null;
-        }
-        return employeeWithMaxSalary.get(0);
+    public EmployeeDTO updateEmployeeById(int id, EmployeeEntity employee) {
+        logger.info("Was invoked method for update employee {} by id {}", employee, id);
+        EmployeeDTO findEmployee = getInformationForEmployee(id);
+        EmployeeEntity employeeEntity = employeeMapper.toEntity(findEmployee);
+        employeeEntity.setName(employee.getName());
+        employeeEntity.setSalary(employee.getSalary());
+        employeeEntity.setPosition(employee.getPosition());
+        EmployeeEntity employeeSave = employeeRepository.save(employee);
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employeeSave);
+        logger.debug("Employee {} changed by id {}", employee, id);
+        return employeeDTO;
     }
 
-    public List<EmployeeDto> getEmployeeWithSalaryHigherThanAverage() {
-        double average = employeeRepository.getAverageOfSalaries();
-        return getFindEmployeeSalaryHigherThan(average);
-    }
-
-    //  в данном методе сделана валидация (если у сотрудника, которого мы хотим добавить оплата <=0 или имя равно null или не указано, тогда кидается исключение  )
-    public List<EmployeeDto> createManyEmployee(List<EmployeeDto> employeeList) {
-        Optional<EmployeeDto> incorrectEmployee = employeeList.stream()
-                .filter(employee -> employee.getSalary() <= 0 ||
-                        employee.getName() == null || employee.getName().isEmpty())
-                .findFirst();
-
-        if (incorrectEmployee.isPresent()) {
-            throw new EmployeeNotValidExeption(incorrectEmployee.get());
-        }
-        // Тот кто отправляет запрос на создание id не должен управлять id т.е. менять
-        return employeeRepository.saveAll(employeeList.stream()
-                        .map(employeeMapper::toEntity)
-                        .collect(Collectors.toList()))
-                .stream()
+    public List<EmployeeDTO> getAllEmployee() {
+        logger.info("The method of getting a list of all employees was called");
+        List<EmployeeDTO> employeeDTOS = employeeRepository.findAll().stream()
                 .map(employeeMapper::toDto)
                 .collect(Collectors.toList());
-
+        logger.debug("A list of all employees has been created");
+        return employeeDTOS;
     }
 
-    public void update(int id, EmployeeDto employee) {
-        Employee oldEmployee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundExeption(id));
-        oldEmployee.setSalary(employee.getSalary());
-        oldEmployee.setName(employee.getName());
-        employeeRepository.save(oldEmployee);
-    }
-
-    public EmployeeDto get(int id) {
-        return employeeRepository.findById(id)
-                .map(employeeMapper::toDto)
-                .map(employeeDto -> {
-                    employeeDto.setPosition(null);
-                    return employeeDto;
-                })
-                .orElseThrow(() -> new EmployeeNotFoundExeption(id));
-    }
-
-    public void delete(int id) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundExeption(id));
+    public void deleteById(int id) {
+        logger.info("The method for deleting an employee was called by id = " + id);
+        EmployeeEntity employee = employeeRepository.findById(id)
+                .orElseThrow(() -> { RuntimeException re = new RuntimeException();
+                    logger.info("The employee with this id was not found" + re);
+                    return re;});
+        logger.error("The employee with this id was not found" + id);
         employeeRepository.delete(employee);
+        logger.debug("The employee with this id has been deleted" + id);
     }
 
-    public List<EmployeeDto> getFindEmployeeSalaryHigherThan(double salary) {
-        return employeeRepository.findEmployeesBySalaryIsGreaterThen(salary);
-    }
-
-    public List<EmployeeDto> getEmployeesWithHighestSalary() {
-        return employeeRepository.getEmployeeWithMaxSalary();
-    }
-
-    public List<EmployeeDto> getEmployees(@Nullable String position) {
-        return Optional.ofNullable(position)
-                .map(employeeRepository::findEmployeesByPosition_PositionContainingIgnoreCase)
-                .orElseGet(employeeRepository::findAll)
-                .stream()
+    public Collection<EmployeeDTO> getEmployeesBySalaryGreaterThan(double salary) {
+        logger.info("The method of getting an list of employees with a salary of more than was called" + salary);
+        Collection<EmployeeDTO> employeeDTOS = employeeRepository.findAll().stream()
                 .map(employeeMapper::toDto)
+                .filter(employee -> employee.getSalary() >= salary)
                 .collect(Collectors.toList());
+        logger.debug("The list of employees with a salary of more than created" + employeeDTOS);
+        return employeeDTOS;
+
     }
 
-    public EmployeeDto getFullInfo(int id) {
-        return employeeRepository.findById(id)
-                .map(employeeMapper::toDto)
-                .orElseThrow(() -> new EmployeeNotFoundExeption(id));
-    }
-
-    public List<EmployeeDto> getEmployeesFromPage(int page) {
-        return employeeRepository.findAll(PageRequest.of(page, 10)).stream()
-                .map(employeeMapper::toDto)
+    public List<EmployeeDTO> getEmployeeByPosition(Optional position) {
+        logger.info("The method of searching for an employee by position was called" + position);
+        List<EmployeeDTO> employeeDTOS = employeeRepository.getEmployeesByName(position).stream()
+                .map(EmployeeDTO::fromEmployee)
                 .collect(Collectors.toList());
+        logger.debug("Employee found" + position);
+        return employeeDTOS;
+
     }
 
-    public int generateReport() {
-        var report = employeeRepository.buildReport();
-        try {
-
-            var content = objectMapper.writeValueAsString(report);
-            var path = generateReportFile(content);
-
-            var reportEntity = new Report();
-            reportEntity.setReport(content);
-            reportEntity.setPath(path);
-            return reportRepository.save(reportEntity).getId();
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Cannot generate report", e);
-        }
+    public List<EmployeeEntity> getEmployeesByPage(int number) {
+        logger.info("The method of searching for employees by page was called" + number);
+        int pageSize = 10;
+        Pageable pageable = PageRequest.of(number, pageSize);
+        Page<EmployeeEntity> employeeDTOPage = employeeRepository.findAll(pageable);
+        List<EmployeeEntity> employeeEntityList = employeeDTOPage.stream()
+                .toList();
+        logger.debug("Page with employees found" + number);
+        return  employeeEntityList;
     }
 
-    public String generateReportFile(String content){
-        var f = new File("report_" + System.currentTimeMillis() + ".json");
-        try (var writer = new FileWriter(f)) {
-            writer.write(content);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Cannot generate report file", e);
-        }
-        return f.getName();
-    }
-
-    public Resource findReport(int id) {
-        return new ByteArrayResource(
-                reportRepository.findById(id)
-                        .orElseThrow(() -> new IllegalStateException("Report with id " + id + " not found"))
-                        .getReport()
-                        .getBytes(StandardCharsets.UTF_8)
-        );
-    }
-
-    public void upload(MultipartFile file) {
-        try {
-            List<EmployeeDto> dtos = objectMapper.readValue(file.getBytes(), new TypeReference<>() {
-            });
-            dtos.stream()
-                    .map(employeeMapper::toEntity)
-                    .forEach(employeeRepository::save);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    // метод, который возвращает нам файл
-    public File findReportFile(int id) {
-        return reportRepository.findById(id)
-                .map(Report::getPath)
-                .map(File::new)
-                .orElse(null);
-    }
 }

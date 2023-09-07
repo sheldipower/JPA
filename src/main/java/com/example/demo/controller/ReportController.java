@@ -1,58 +1,38 @@
 package com.example.demo.controller;
 
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import service.EmployeeService;
+import repository.ReportRepository;
+import service.ReportReaderService;
+import service.ReportService;
 
 import javax.annotation.Resource;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/report")
 public class ReportController {
-    private final EmployeeService employeeService;
+    private  final ReportService reportService;
+    private final ReportReaderService reportReaderService;
+    private final ReportRepository reportRepository;
 
-    public ReportController(EmployeeService employeeService) {
-        this.employeeService = employeeService;
+    @PostMapping("/report")
+    public int createReport() {
+        return reportService.saveReportToJsonAndDB();
     }
 
-    @PostMapping("/")
-    public int report() {
-        return employeeService.generateReport();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Resource> find(@PathVariable int id) {
-        Resource resource = employeeService.findReport(id);
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.json\"")
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<Resource> getReportById(@PathVariable int id) {
+        String file = "file.json";
+        String jsonFile = reportService.getReportById(id).getFilePath();
+        Resource resource = new ByteArrayResource(jsonFile.getBytes());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .body(resource);
     }
-    @GetMapping("file/{id}")
-    public ResponseEntity<Resource> findFile(@PathVariable int id) {
-        var file = employeeService.findReportFile(id);
-        if (file == null) {
-            return ResponseEntity.noContent().build();
-        }
-        try {
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.json")
-                    .contentLength(file.length())
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(resource);
-        } catch (FileNotFoundException e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-
-
 }
 
